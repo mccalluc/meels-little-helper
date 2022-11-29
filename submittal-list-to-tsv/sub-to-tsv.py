@@ -87,24 +87,14 @@ def select_leaves(stacks):
       filtered.append(stack)
   return filtered
 
-def clean_description(extracted):
-  # For all permanently installed products and materials
-  # --> LEED product and material documentation
-  # as follows: --> ''
-  # . --> ''
-  return extracted
 
-def dedup(rows):
-  joined = ['\t'.join(row) for row in rows]
-  deduped = dict.fromkeys(joined)
-  return [joined.split('\t') for joined in deduped.keys()]
 
-def extract(stack):
+def extract_row(stack):
   match_0 = re.match(r'SECTION (\d{6})', stack[0])
   match_1 = re.match(r'(1\.[45]) (ACTION|INFORMATIONAL) SUBMITTALS', stack[1])
   match_2 = re.match(r'[A-Z]\. ([^:]+)', stack[2])
   match_3 = re.match(r'\d+\. (.+)', stack[3]) if len(stack) >= 4 else [None, None]
-  return [
+  return '\t'.join([
     match_0[1],
     match_1[1],
     '',
@@ -112,21 +102,31 @@ def extract(stack):
     match_1[2].title(),
     map_status(match_2[1]),
     'NYS'
-  ]
+  ])
+
+def clean_row(row):
+  replaced = row \
+    .replace(' as follows:\t', '\t') \
+    .replace('.\t', '\t')
+  return re.sub(
+    r'For all permanently installed products and materials[^\t]*',
+    'LEED product and material documentation', replaced)
+
+def dedup(rows):
+  return list(dict.fromkeys(rows))
 
 def main():
   if len(argv) != 2:
     raise Exception('Requires a submittals file to parse')
   with open(argv[1]) as outline:
     lines = clean(outline)
-    stacks = stack_lines(lines)
-    filtered_stacks = filter_stacks(stacks)
-    leaf_stacks = select_leaves(filtered_stacks)
-    rows = [extract(stack) for stack in leaf_stacks]
-    dedup_rows = dedup(rows)
-    for row in dedup_rows:
-      # For debugging:
-      #print(' | '.join(el[:35] for el in extracted))
-      print('\t'.join(row))
+  stacks = stack_lines(lines)
+  filtered_stacks = filter_stacks(stacks)
+  leaf_stacks = select_leaves(filtered_stacks)
+  rows = [extract_row(stack) for stack in leaf_stacks]
+  clean_rows = [clean_row(row) for row in rows]
+  dedup_rows = dedup(clean_rows)
+  for row in dedup_rows:
+    print(row)
 
 main()
