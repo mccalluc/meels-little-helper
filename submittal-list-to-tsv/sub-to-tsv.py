@@ -6,7 +6,7 @@ import re
 def get_level(line):
   if re.match(r'SECTION \d{6}', line):
     return 0
-  if re.match(r'1\.[45] (ACTION|INFORMATIONAL) SUBMITTALS', line):
+  if re.match(r'\d+\.\d+ (ACTION|INFORMATIONAL) SUBMITTALS', line):
     return 1
   if re.match(r'[A-Z]\.', line):
     return 2
@@ -91,7 +91,7 @@ def select_leaves(stacks):
 
 def extract_row(stack):
   match_0 = re.match(r'SECTION (\d{6})', stack[0])
-  match_1 = re.match(r'(1\.[45]) (ACTION|INFORMATIONAL) SUBMITTALS', stack[1])
+  match_1 = re.match(r'(\d+\.\d+) (ACTION|INFORMATIONAL) SUBMITTALS', stack[1])
   match_2 = re.match(r'[A-Z]\. ([^:]+)', stack[2])
   match_3 = re.match(r'\d+\. (.+)', stack[3]) if len(stack) >= 4 else [None, None]
   return '\t'.join([
