@@ -46,7 +46,26 @@ def stack_lines(lines):
   stacks.append([]) # So every line has a next line
   return stacks
 
+def filter_stacks(stacks):
+  # Remove unwanted leaves
+  return [
+    stack for stack in stacks
+    if len(stack) <= 3 
+       or 'Shop Drawings' not in stack[2]
+  ]
+
 def map_status(status):
+  #   SD - Shop Drawing
+  #   SAM - Sample 
+  #   CAL - Calculations 
+  #   TEST - Test report 
+  #   WAR - Warranty 
+  #   CERT - Certification 
+  #   QC - Quality Control / Qualifications submittal 
+  #   EXT Extra Stock / tool 
+  #   OMM - Operations Maintenance Manual 
+  #   REP Report 
+  #   OTH - descr in comments
   return {
     'Shop Drawings': 'SD',
     'Samples for Initial Selection': 'SAM',
@@ -60,21 +79,8 @@ def map_status(status):
     'Maintenance Data': 'OMM',
     'Restoration Program.': 'OTH'
   }[status]
-# status_map = {
-#   SD - Shop Drawing
-#   SAM - Sample 
-#   CAL - Calculations 
-#   TEST - Test report 
-#   WAR - Warranty 
-#   CERT - Certification 
-#   QC - Quality Control / Qualifications submittal 
-#   EXT Extra Stock / tool 
-#   OMM - Operations Maintenance Manual 
-#   REP Report 
-#   OTH - descr in comments
-# }
 
-def filter_leaves(stacks):
+def select_leaves(stacks):
   filtered = []
   for i, stack in enumerate(stacks[:-1]):
     if len(stack) >= len(stacks[i+1]):
@@ -102,8 +108,9 @@ def main():
   with open(argv[1]) as outline:
     lines = clean(outline)
     stacks = stack_lines(lines)
-    filtered_stacks = filter_leaves(stacks)
-    for stack in filtered_stacks:
+    filtered_stacks = filter_stacks(stacks)
+    leaf_stacks = select_leaves(filtered_stacks)
+    for stack in leaf_stacks:
       extracted = extract(stack)
       # For debugging:
       #print(' | '.join(el[:35] for el in extracted))
