@@ -87,8 +87,6 @@ def select_leaves(stacks):
       filtered.append(stack)
   return filtered
 
-
-
 def extract_row(stack):
   match_0 = re.match(r'SECTION (\d{6})', stack[0])
   match_1 = re.match(r'(\d+\.\d+) (ACTION|INFORMATIONAL) SUBMITTALS', stack[1])
