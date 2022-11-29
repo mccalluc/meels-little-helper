@@ -87,6 +87,18 @@ def select_leaves(stacks):
       filtered.append(stack)
   return filtered
 
+def clean_description(extracted):
+  # For all permanently installed products and materials
+  # --> LEED product and material documentation
+  # as follows: --> ''
+  # . --> ''
+  return extracted
+
+def dedup(rows):
+  joined = ['\t'.join(row) for row in rows]
+  deduped = dict.fromkeys(joined)
+  return [joined.split('\t') for joined in deduped.keys()]
+
 def extract(stack):
   match_0 = re.match(r'SECTION (\d{6})', stack[0])
   match_1 = re.match(r'(1\.[45]) (ACTION|INFORMATIONAL) SUBMITTALS', stack[1])
@@ -110,10 +122,11 @@ def main():
     stacks = stack_lines(lines)
     filtered_stacks = filter_stacks(stacks)
     leaf_stacks = select_leaves(filtered_stacks)
-    for stack in leaf_stacks:
-      extracted = extract(stack)
+    rows = [extract(stack) for stack in leaf_stacks]
+    dedup_rows = dedup(rows)
+    for row in dedup_rows:
       # For debugging:
       #print(' | '.join(el[:35] for el in extracted))
-      print('\t'.join(extracted))
+      print('\t'.join(row))
 
 main()
