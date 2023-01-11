@@ -85,7 +85,7 @@ def map_status(status):
     'Evaluation Reports': 'REP',
     'Maintenance Data': 'OMM',
     'Restoration Program.': 'OTH'
-  }[status]
+  }.get(status) or f'Unknown: {status}'
 
 def select_leaves(stacks):
   filtered = []
@@ -95,9 +95,9 @@ def select_leaves(stacks):
   return filtered
 
 def extract_row(stack):
-  match_0 = re.match(level_0_re, stack[0])
-  match_1 = re.match(level_1_re, stack[1])
-  match_2 = re.match(level_2_re, stack[2])
+  match_0 = re.match(level_0_re, stack[0]) if len(stack) > 0 else [None, "???"]
+  match_1 = re.match(level_1_re, stack[1]) if len(stack) > 1 else [None, "???", "???"]
+  match_2 = re.match(level_2_re, stack[2]) if len(stack) > 2 else [None, "???"]
   match_3 = re.match(level_3_re, stack[3]) if len(stack) >= 4 else [None, None]
   return '\t'.join([
     match_0[1],
