@@ -3,16 +3,22 @@
 from sys import argv
 import re
 
+level_0_re = r'SECTION (\d{6}(\.\d{2})?)'
+level_1_re = r'(\d+\.\d+)\s+(\S.*)'
+level_2_re = r'[A-Z]\.\s+([^:]+)'
+level_3_re = r'\d+\.\s+(.+)'
+level_4_re = r'[a-z]\.\s'
+
 def get_level(line):
-  if re.match(r'SECTION \d{6}', line):
+  if re.match(level_0_re, line):
     return 0
-  if re.match(r'\d+\.\d+ (ACTION|INFORMATIONAL) SUBMITTALS', line):
+  if re.match(level_1_re, line):
     return 1
-  if re.match(r'[A-Z]\.', line):
+  if re.match(level_2_re, line):
     return 2
-  if re.match(r'\d+\. ', line):
+  if re.match(level_3_re, line):
     return 3
-  if re.match(r'[a-z]\. ', line):
+  if re.match(level_4_re, line):
     return 4
   return None
 
@@ -35,11 +41,12 @@ def clean(outline):
 def stack_lines(lines):
   stacks = []
   stack = []
-  for line in lines:
+  for n, line in enumerate(lines):
     line_level = get_level(line)
-    if len(stack) < line_level:
-      raise Exception('Unexpected indentation jump')
-    if len(stack) > line_level:
+    len_stack = len(stack)
+    if len_stack < line_level:
+      raise Exception(f'Unexpected indentation jump at line {n}: stack={len_stack} < level={line_level}. "{line}"')
+    if len_stack > line_level:
       stack = stack[:line_level]
     stack.append(line)
     stacks.append(stack.copy())
@@ -88,10 +95,10 @@ def select_leaves(stacks):
   return filtered
 
 def extract_row(stack):
-  match_0 = re.match(r'SECTION (\d{6})', stack[0])
-  match_1 = re.match(r'(\d+\.\d+) (ACTION|INFORMATIONAL) SUBMITTALS', stack[1])
-  match_2 = re.match(r'[A-Z]\. ([^:]+)', stack[2])
-  match_3 = re.match(r'\d+\. (.+)', stack[3]) if len(stack) >= 4 else [None, None]
+  match_0 = re.match(level_0_re, stack[0])
+  match_1 = re.match(level_1_re, stack[1])
+  match_2 = re.match(level_2_re, stack[2])
+  match_3 = re.match(level_3_re, stack[3]) if len(stack) >= 4 else [None, None]
   return '\t'.join([
     match_0[1],
     match_1[1],
@@ -116,7 +123,7 @@ def dedup(rows):
 def main():
   if len(argv) != 2:
     raise Exception('Requires a submittals file to parse')
-  with open(argv[1]) as outline:
+  with open(argv[1], 'r', encoding='ISO-8859-1') as outline:
     lines = clean(outline)
   stacks = stack_lines(lines)
   filtered_stacks = filter_stacks(stacks)
